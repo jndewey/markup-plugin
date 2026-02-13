@@ -1,0 +1,65 @@
+TERM SHEET
+CONFIDENTIAL
+
+Date: December 15, 2025
+
+Borrower:       Sunshine Properties LLC, a Florida limited liability company
+Guarantor:      John Smith
+Lender:         First National Bank
+Property:       1500 Brickell Avenue, Miami, Florida 33131 (Class A Office)
+
+LOAN TERMS
+
+Loan Amount:    $50,000,000
+Interest Rate:  SOFR + 2.25% (Note: negotiated down from 2.50%)
+Maturity:       5 years from closing
+Extensions:     Two 1-year extensions; conditions: no default, DSCR >= 1.25x, LTV <= 70%
+Prepayment:     Locked for 2 years, then 2%/1%/0% step-down
+
+FINANCIAL COVENANTS
+
+DSCR:           Minimum 1.20x tested quarterly on trailing 12-month basis
+                Cure right: if DSCR < 1.20x, Borrower may deposit cash collateral
+                Hard default: DSCR < 1.05x
+LTV:            Maximum 75%; annual appraisal at Lender's expense (Borrower's expense
+                only if Event of Default exists)
+
+CASH MANAGEMENT
+
+Lockbox:        Soft lockbox; converts to hard lockbox during Cash Management Period
+CMP Triggers:   (a) Event of Default, or (b) DSCR < 1.15x for two consecutive quarters
+CMP Exit:       DSCR >= 1.20x for two consecutive quarters
+
+TRANSFERS
+
+Permitted:      Transfers of up to 49% indirect interests to Guarantor family members
+                without consent; management company changes with Lender's reasonable consent
+Prohibited:     All other transfers require Lender's consent (not to be unreasonably
+                withheld, conditioned, or delayed)
+
+RECOURSE
+
+Structure:      Non-recourse with standard carveouts
+Carveouts:      Fraud, misrepresentation, misapplication of funds, waste, voluntary
+                bankruptcy, failure to maintain insurance, environmental liability
+Springing:      Full recourse upon unauthorized transfer or involuntary bankruptcy
+                not dismissed within 90 days
+
+EVENTS OF DEFAULT / CURE PERIODS
+
+Payment:        10 Business Days
+Covenant:       30 days (with 30-day extension for diligent cure)
+Cross-default:  Threshold of $500,000; only after expiration of applicable cure period
+Judgment:       $500,000 threshold; 60 days to satisfy or bond
+
+REPORTING
+
+Annual:         Audited financials within 90 days of fiscal year end
+Quarterly:      Unaudited financials within 45 days of quarter end
+Monthly:        Property operating statements within 30 days of month end
+
+SPECIAL CONDITIONS
+
+1. Lender's approval rights shall be exercised reasonably and in good faith
+2. All notices require minimum 10 Business Days
+3. Borrower shall have the right to contest taxes in good faith with appropriate reserves

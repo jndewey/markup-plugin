@@ -1,0 +1,188 @@
+LOAN AGREEMENT
+
+THIS LOAN AGREEMENT (this "Agreement") is entered into as of January 15, 2026, by and between SUNSHINE PROPERTIES LLC, a Florida limited liability company ("Borrower"), and FIRST NATIONAL BANK, a national banking association ("Lender").
+
+RECITALS
+
+WHEREAS, Borrower is the owner of certain real property located at 1500 Brickell Avenue, Miami, Florida 33131 (the "Property"); and
+
+WHEREAS, Borrower has requested that Lender make a loan to Borrower in the original principal amount of Fifty Million and No/100 Dollars ($50,000,000.00) (the "Loan"), which Loan shall be secured by, among other things, a first priority mortgage lien on the Property;
+
+NOW, THEREFORE, in consideration of the mutual covenants and agreements set forth herein, and for other good and valuable consideration, the receipt and sufficiency of which are hereby acknowledged, the parties agree as follows:
+
+ARTICLE I
+DEFINITIONS
+
+Section 1.01. Defined Terms. As used in this Agreement, the following terms shall have the meanings set forth below:
+
+"Business Day" means any day other than a Saturday, Sunday, or other day on which commercial banks in Miami, Florida are authorized or required by law to close.
+
+"Cash Management Period" means any period commencing on the date on which (a) an Event of Default has occurred and is continuing, (b) the Debt Service Coverage Ratio is less than 1.20:1.00 as of the end of any calendar quarter, or (c) Borrower fails to deliver any financial statements required hereunder within the time periods specified herein, and ending on the date on which such Event of Default has been cured or waived by Lender, or such Debt Service Coverage Ratio has been equal to or greater than 1.25:1.00 for two consecutive calendar quarters.
+
+"Consolidated EBITDA" means, for any period, the net income of Borrower for such period plus, to the extent deducted in determining net income, interest expense, income tax expense, depreciation, and amortization.
+
+"Debt Service Coverage Ratio" or "DSCR" means, as of any date of determination, the ratio of (a) Net Operating Income for the trailing twelve-month period ending on such date to (b) the aggregate amount of Debt Service for such period.
+
+"Event of Default" has the meaning set forth in Article VIII.
+
+"Guarantor" means John Smith, an individual.
+
+"Guaranty" means that certain Guaranty of Recourse Obligations dated as of the date hereof, executed by Guarantor in favor of Lender.
+
+"Loan-to-Value Ratio" or "LTV" means, as of any date of determination, the ratio of (a) the outstanding principal balance of the Loan to (b) the appraised value of the Property as determined by Lender.
+
+"Material Adverse Effect" means any event, circumstance, or condition that has or could reasonably be expected to have a material adverse effect on (a) the business, assets, operations, or financial condition of Borrower, (b) the value of the Property, (c) the ability of Borrower to perform its obligations under the Loan Documents, or (d) the rights and remedies of Lender under the Loan Documents.
+
+"Net Operating Income" means, for any period, all revenue derived from the operation of the Property during such period, minus all operating expenses actually paid during such period, excluding debt service, capital expenditures, depreciation, and amortization.
+
+"Permitted Transfer" has the meaning set forth in Section 7.05.
+
+ARTICLE II
+THE LOAN
+
+Section 2.01. Loan Amount. Subject to the terms and conditions of this Agreement, Lender agrees to make the Loan to Borrower in the original principal amount of $50,000,000.00.
+
+Section 2.02. Interest Rate. The Loan shall bear interest at a rate equal to the Secured Overnight Financing Rate ("SOFR") plus 2.50% per annum (the "Interest Rate"), calculated on the basis of a 360-day year and the actual number of days elapsed.
+
+Section 2.03. Maturity Date. Unless sooner accelerated in accordance with the terms hereof, the entire outstanding principal balance of the Loan, together with all accrued and unpaid interest and all other amounts due hereunder, shall be due and payable on January 15, 2031 (the "Maturity Date").
+
+Section 2.04. Extension Option. Borrower shall have two (2) options to extend the Maturity Date for successive periods of one (1) year each (each, an "Extension Option"), provided that on the date of exercise of each Extension Option: (a) no Event of Default exists, (b) the DSCR is not less than 1.30:1.00, (c) the LTV is not greater than 65%, and (d) Borrower pays an extension fee equal to 0.25% of the then outstanding principal balance.
+
+Section 2.05. Prepayment. Borrower may prepay the Loan in whole or in part upon not less than thirty (30) days' prior written notice to Lender, subject to payment of the applicable Prepayment Premium. The "Prepayment Premium" shall be equal to (a) 3.00% of the amount prepaid if such prepayment occurs during the first two (2) years following the date hereof, (b) 2.00% if during the third year, (c) 1.00% if during the fourth year, and (d) zero if thereafter.
+
+ARTICLE III
+CONDITIONS PRECEDENT
+
+Section 3.01. Conditions to Closing. The obligation of Lender to make the Loan shall be subject to the satisfaction of the following conditions precedent:
+
+(a) Lender shall have received all of the Loan Documents, duly executed and delivered by all parties thereto;
+(b) Lender shall have received a title insurance commitment satisfactory to Lender in all respects;
+(c) Lender shall have received an appraisal of the Property satisfactory to Lender;
+(d) Lender shall have received an environmental site assessment satisfactory to Lender;
+(e) Borrower shall have paid all fees and expenses due and payable hereunder;
+(f) No Material Adverse Effect shall have occurred since the date of Borrower's most recent financial statements delivered to Lender; and
+(g) Lender shall have received such other documents and instruments as Lender may reasonably require.
+
+ARTICLE IV
+REPRESENTATIONS AND WARRANTIES
+
+Section 4.01. Representations of Borrower. Borrower hereby represents and warrants to Lender as of the date hereof and as of each date on which any representation is deemed repeated hereunder:
+
+(a) Organization. Borrower is a limited liability company duly organized, validly existing, and in good standing under the laws of the State of Florida.
+(b) Authority. Borrower has full power and authority to execute, deliver, and perform its obligations under each of the Loan Documents.
+(c) No Conflicts. The execution and delivery of the Loan Documents do not violate any law, regulation, or agreement binding on Borrower.
+(d) Financial Statements. All financial statements delivered to Lender are true, complete, and correct in all material respects.
+(e) Litigation. There is no pending or threatened litigation that could have a Material Adverse Effect.
+(f) Environmental. To Borrower's knowledge, the Property is in compliance with all Environmental Laws in all material respects.
+(g) ERISA. Borrower is not an "employee benefit plan" as defined in ERISA.
+(h) Tax Returns. Borrower has filed all required tax returns and paid all taxes due.
+(i) Sanctions. Neither Borrower nor any of its principals is a Sanctioned Person.
+
+ARTICLE V
+AFFIRMATIVE COVENANTS
+
+Section 5.01. Financial Reporting. Borrower shall deliver to Lender:
+(a) within ninety (90) days after the end of each fiscal year, audited annual financial statements;
+(b) within forty-five (45) days after the end of each fiscal quarter, unaudited quarterly financial statements;
+(c) within thirty (30) days after the end of each calendar month, monthly operating statements for the Property; and
+(d) such other financial information as Lender may reasonably request from time to time.
+
+Section 5.02. Insurance. Borrower shall maintain, at Borrower's sole cost and expense, insurance coverage in such amounts and covering such risks as Lender may require, including property insurance, liability insurance, and flood insurance if the Property is located in a flood zone.
+
+Section 5.03. Maintenance. Borrower shall maintain the Property in good condition and repair and shall not commit or permit any waste.
+
+Section 5.04. Compliance with Laws. Borrower shall comply with all applicable laws, ordinances, rules, and regulations.
+
+Section 5.05. Payment of Taxes. Borrower shall pay all taxes, assessments, and governmental charges levied upon the Property before any penalty or interest accrues thereon.
+
+ARTICLE VI
+FINANCIAL COVENANTS
+
+Section 6.01. Debt Service Coverage Ratio. Borrower shall maintain a DSCR of not less than 1.25:1.00 as of the end of each calendar quarter, calculated on a trailing twelve-month basis. If the DSCR falls below 1.25:1.00 but remains at or above 1.10:1.00, Borrower shall deposit with Lender an amount equal to the shortfall. If the DSCR falls below 1.10:1.00, an Event of Default shall exist.
+
+Section 6.02. Loan-to-Value Ratio. The LTV shall not exceed 75% at any time. Lender shall have the right to require an appraisal at Borrower's expense not more than once per calendar year (or more frequently if an Event of Default exists or the DSCR falls below 1.25:1.00).
+
+ARTICLE VII
+NEGATIVE COVENANTS
+
+Section 7.01. Indebtedness. Borrower shall not incur, create, assume, or permit to exist any indebtedness other than the Loan without the prior written consent of Lender.
+
+Section 7.02. Liens. Borrower shall not create, incur, assume, or permit to exist any lien on the Property or any other collateral securing the Loan, other than Permitted Liens.
+
+Section 7.03. Distributions. Borrower shall not make any distributions to its members unless (a) no Event of Default exists, (b) the DSCR is not less than 1.25:1.00, and (c) all required reserves are fully funded.
+
+Section 7.04. Organizational Changes. Borrower shall not amend its organizational documents, change its state of organization, or modify its ownership structure without the prior written consent of Lender, which consent shall not be unreasonably withheld.
+
+Section 7.05. Transfers. Borrower shall not sell, transfer, convey, or otherwise dispose of all or any portion of the Property or any direct or indirect ownership interest in Borrower without the prior written consent of Lender, which consent may be withheld in Lender's sole and absolute discretion; provided, however, that the following shall be "Permitted Transfers": (a) transfers of up to 49% of the indirect ownership interests in Borrower to family members of Guarantor, and (b) transfers of the property management agreement to a manager approved by Lender.
+
+ARTICLE VIII
+EVENTS OF DEFAULT
+
+Section 8.01. Events of Default. Each of the following shall constitute an "Event of Default" under this Agreement:
+
+(a) Payment Default. Borrower fails to pay any amount due under the Loan Documents within five (5) days after the date when due.
+(b) Covenant Default. Borrower fails to perform any covenant or obligation under any Loan Document (other than a payment obligation) and such failure continues for ten (10) days after written notice thereof from Lender; provided that if such default is susceptible of cure and Borrower is diligently pursuing a cure, Borrower shall have an additional twenty (20) days to effect such cure.
+(c) Representation Default. Any representation or warranty made by Borrower proves to be untrue or misleading in any material respect.
+(d) Cross-Default. Borrower defaults under any other indebtedness in excess of $100,000.
+(e) Bankruptcy. Borrower or Guarantor becomes the subject of any bankruptcy or insolvency proceeding.
+(f) Judgment. A judgment in excess of $250,000 is entered against Borrower and remains unsatisfied for thirty (30) days.
+(g) DSCR Default. The DSCR falls below 1.10:1.00 as provided in Section 6.01.
+(h) Material Adverse Effect. A Material Adverse Effect has occurred as determined by Lender in its sole discretion.
+
+ARTICLE IX
+REMEDIES
+
+Section 9.01. Acceleration. Upon the occurrence of an Event of Default, Lender may declare the entire outstanding principal balance, together with all accrued interest and other amounts due, immediately due and payable without notice or demand.
+
+Section 9.02. Other Remedies. In addition to acceleration, Lender shall have all rights and remedies available at law or in equity, including the right to foreclose on the Property, appoint a receiver, and exercise any remedies under the Uniform Commercial Code.
+
+Section 9.03. Application of Proceeds. All proceeds received by Lender in connection with the exercise of remedies shall be applied in the following order: (a) costs and expenses of Lender, (b) accrued interest, (c) outstanding principal, and (d) any remaining amounts to Borrower.
+
+ARTICLE X
+CASH MANAGEMENT
+
+Section 10.01. Lockbox Account. Borrower shall establish and maintain a lockbox account at a financial institution approved by Lender (the "Lockbox Account"). All rents and revenues from the Property shall be deposited into the Lockbox Account.
+
+Section 10.02. Cash Sweep. During a Cash Management Period, all funds in the Lockbox Account shall be swept daily into an account controlled by Lender and applied in the following order of priority: (a) monthly debt service, (b) required reserve deposits, (c) approved operating expenses, and (d) the balance to an excess cash reserve held by Lender.
+
+Section 10.03. Release of Excess Cash. Funds held in the excess cash reserve shall be released to Borrower within five (5) Business Days following the end of a Cash Management Period.
+
+ARTICLE XI
+GUARANTY AND RECOURSE
+
+Section 11.01. Non-Recourse. Except as set forth in Section 11.02, the Loan shall be non-recourse to Borrower and Guarantor, and Lender's sole recourse shall be to the Property and the other collateral securing the Loan.
+
+Section 11.02. Recourse Carveouts. Notwithstanding Section 11.01, Borrower and Guarantor shall be personally liable for losses arising from: (a) fraud or intentional misrepresentation, (b) misapplication or misappropriation of funds, (c) waste of the Property, (d) failure to maintain required insurance, (e) environmental liability, and (f) any voluntary bankruptcy filing.
+
+Section 11.03. Springing Recourse. The Loan shall become fully recourse to Borrower and Guarantor upon: (a) any unauthorized transfer of the Property or any ownership interest in Borrower, or (b) any involuntary bankruptcy filing that is not dismissed within sixty (60) days.
+
+ARTICLE XII
+MISCELLANEOUS
+
+Section 12.01. Notices. All notices shall be in writing and shall be deemed given when delivered by hand, sent by overnight courier, or three (3) days after being sent by certified mail, return receipt requested.
+
+Section 12.02. Governing Law. This Agreement shall be governed by the laws of the State of Florida.
+
+Section 12.03. Amendments. This Agreement may not be amended except by a written instrument signed by both Borrower and Lender.
+
+Section 12.04. Entire Agreement. This Agreement, together with the other Loan Documents, constitutes the entire agreement between the parties.
+
+Section 12.05. Severability. If any provision of this Agreement is held to be invalid, the remaining provisions shall remain in full force and effect.
+
+Section 12.06. Successors and Assigns. This Agreement shall bind and inure to the benefit of the parties and their respective successors and assigns; provided that Borrower shall not assign its rights hereunder without the prior written consent of Lender.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.
+
+BORROWER:
+SUNSHINE PROPERTIES LLC
+
+By: ___________________________
+Name: Jane Doe
+Title: Managing Member
+
+LENDER:
+FIRST NATIONAL BANK
+
+By: ___________________________
+Name: Robert Johnson
+Title: Senior Vice President
