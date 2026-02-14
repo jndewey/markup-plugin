@@ -398,10 +398,16 @@ def main():
                 prov_texts.append(all_texts[i])
                 prov_norms.append(all_norms[i])
 
-        # Read revised.txt
+        # Read revised.txt, stripping inline commentary markers.
+        # Use greedy match (.*) so nested brackets like $[X] inside a marker
+        # don't prematurely close the match.
+        def strip_markers(line):
+            line = re.sub(r'\s*\[(REVISED|NOTE|COMMENT|RECOMMENDATION):.*\]', '', line)
+            return line.rstrip('\n')
+
         with open(prov['revised_path']) as f:
             revised_raw = [
-                re.sub(r'\s*\[REVISED:.*?\]', '', l).rstrip('\n')
+                strip_markers(l)
                 for l in f if l.strip()
             ]
         rev_norms = [nm(l) for l in revised_raw]

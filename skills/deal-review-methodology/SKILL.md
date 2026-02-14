@@ -211,7 +211,12 @@ For each provision folder, create these files:
 
 ### `revised.txt`
 The full revised text of the provision. Include ALL text, not just changes.
-Mark revisions with [REVISED: explanation] inline comments.
+Mark revisions with brief [REVISED: explanation] inline comments (e.g.,
+[REVISED: added reasonableness qualifier] or [REVISED: conformed to term sheet]).
+Keep markers to ONE SHORT PHRASE — do not include analysis, recommendations,
+or multi-sentence commentary inside markers. Detailed analysis belongs in
+analysis.md and changes_summary.md, not in revised.txt. If a provision requires
+no changes, reproduce the original text without any markers.
 
 ### `changes_summary.md`
 ```markdown
