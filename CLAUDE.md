@@ -131,82 +131,83 @@ When the original agreement was provided as a `.docx` file, the `unpacked/` dire
 contains the extracted Word XML. You can apply revisions as **tracked changes** directly
 in the Word document, producing a professional redline.
 
-### Prerequisites
-The following scripts from the docx skill are available:
-- **Unpack**: `python /mnt/skills/public/docx/scripts/office/unpack.py`
-- **Pack**: `python /mnt/skills/public/docx/scripts/office/pack.py`
-- **Validate**: `python /mnt/skills/public/docx/scripts/office/validate.py`
-- **Comments**: `python /mnt/skills/public/docx/scripts/comment.py`
+### Automated Script (Preferred)
 
-### How to Apply Tracked Changes
+A generalized script at `scripts/apply_redlines.py` automates the entire redlining
+process using the Document library from the built-in docx skill:
 
-The unpacked document XML is at `unpacked/word/document.xml`. To make tracked changes:
+```bash
+PYTHONPATH=~/.claude/skills/docx python scripts/apply_redlines.py [deal_dir]
+```
 
-1. **Read the document.xml** to locate the specific text you want to change
-2. **Apply minimal edits** — only mark what actually changes:
+The script:
+- Reads all reviewed provisions (status "reviewed" with `revised.txt`)
+- Uses **character-level diff** to identify minimal changes between original and revised text
+- Applies tracked changes via the Document library (`replace_node()`, `suggest_deletion()`, `insert_after()`)
+- Uses bipartite matching for paragraph-level alignment (handles reordering and replacements)
+- Converts UTF-16 encoded XML files to UTF-8 automatically (some .docx files have this)
+- Validates the result: the redlining validator confirms that reverting all changes
+  reproduces the original document exactly
+- Outputs `redline_agreement.docx` in the deal directory
+
+### Document Library
+
+The docx skill includes a `Document` library (importable when `PYTHONPATH` includes
+the skill root) that handles OOXML infrastructure automatically:
+
+- **Automatic setup**: `people.xml`, RSIDs, `settings.xml` entries for tracked changes
+- **Attribute injection**: `w:id`, `w:author`, `w:date`, `w:rsidR` on all tracked change elements
+- **Validation**: Schema validation + redlining validation (reverting changes must match original)
+- **Comments**: `doc.add_comment(start_node, end_node, text)` with auto-wired comment references
+
+Read the full API documentation in `ooxml.md` from the docx skill before writing
+custom redlining scripts. Key classes: `Document`, `DocxXMLEditor`.
+
+### Manual Tracked Changes (Fallback)
+
+If the automated script is unavailable, apply changes manually in `unpacked/word/document.xml`:
 
 **To delete text:**
 ```xml
-<w:del w:id="UNIQUE_ID" w:author="Claude" w:date="2026-01-01T00:00:00Z">
+<w:del w:id="UNIQUE_ID" w:author="HK" w:date="2026-01-01T00:00:00Z">
   <w:r><w:rPr>COPY_ORIGINAL_RPR</w:rPr><w:delText>text being removed</w:delText></w:r>
 </w:del>
 ```
 
 **To insert text:**
 ```xml
-<w:ins w:id="UNIQUE_ID" w:author="Claude" w:date="2026-01-01T00:00:00Z">
+<w:ins w:id="UNIQUE_ID" w:author="HK" w:date="2026-01-01T00:00:00Z">
   <w:r><w:rPr>COPY_ORIGINAL_RPR</w:rPr><w:t>text being added</w:t></w:r>
 </w:ins>
 ```
 
 **To replace text (delete + insert):**
 ```xml
-<w:del w:id="ID1" w:author="Claude" w:date="...">
+<w:del w:id="ID1" w:author="HK" w:date="...">
   <w:r><w:rPr>COPY_RPR</w:rPr><w:delText>old text</w:delText></w:r>
 </w:del>
-<w:ins w:id="ID2" w:author="Claude" w:date="...">
+<w:ins w:id="ID2" w:author="HK" w:date="...">
   <w:r><w:rPr>COPY_RPR</w:rPr><w:t>new text</w:t></w:r>
 </w:ins>
 ```
 
-3. **Add comments** explaining each change using the comment.py script:
-```bash
-python /mnt/skills/public/docx/scripts/comment.py unpacked/ COMMENT_ID "Explanation text"
-```
-Then add comment markers in document.xml around the changed text:
-```xml
-<w:commentRangeStart w:id="COMMENT_ID"/>
-  ... changed content ...
-<w:commentRangeEnd w:id="COMMENT_ID"/>
-<w:r><w:rPr><w:rStyle w:val="CommentReference"/></w:rPr><w:commentReference w:id="COMMENT_ID"/></w:r>
-```
-
-4. **Critical rules for tracked changes:**
-   - Each `w:id` must be unique across the entire document
-   - Always copy the original `<w:rPr>` formatting into your tracked change runs
-   - Replace entire `<w:r>` elements — don't inject tracked change tags inside a run
-   - Use `<w:delText>` (not `<w:t>`) inside `<w:del>` blocks
-   - Use `&#x2019;` for apostrophes and `&#x201C;`/`&#x201D;` for quotes
-   - Comment range markers are siblings of `<w:r>`, never inside them
-   - Use "Claude" as the author for all tracked changes and comments
-
-5. **Repack the document:**
-```bash
-python /mnt/skills/public/docx/scripts/office/pack.py unpacked/ redline_agreement.docx --original original.docx
-```
-
-6. **Validate:**
-```bash
-python /mnt/skills/public/docx/scripts/office/validate.py redline_agreement.docx
-```
+### Critical Rules for Tracked Changes
+- Each `w:id` must be unique across the entire document
+- Always copy the original `<w:rPr>` formatting into tracked change runs
+- Replace entire `<w:r>` elements — don't inject tracked change tags inside a run
+- Use `<w:delText>` (not `<w:t>`) inside `<w:del>` blocks
+- Use `&#x2019;` for apostrophes and `&#x201C;`/`&#x201D;` for quotes
+- Use "HK" as the author for all tracked changes and comments
+- **Character-level diff** (not word-level) preserves exact original whitespace
+  and passes redlining validation
+- **UTF-16 handling**: Some .docx files have `customXml/item*.xml` in UTF-16;
+  convert to UTF-8 before processing
 
 ### Tracked Changes Strategy
 - Work provision by provision through document.xml
-- For each provision, make the same revisions you documented in `revised.txt`
+- For each provision, make the same revisions documented in `revised.txt`
 - Add a comment for each substantive change explaining the rationale
-- Keep a running counter for unique w:id values (start at 1000 to avoid conflicts)
-- Keep a running counter for comment IDs (start at 0)
-- After all changes, validate and repack
+- Output to `redline_agreement.docx` in the deal workspace
 
 ## Output Format for Each Provision
 
