@@ -403,11 +403,14 @@ def install_skills(output_dir: Path, skill_paths: list[str]) -> list[dict]:
         # Parse metadata
         metadata = parse_skill_frontmatter(skill_path)
 
-        # Copy to skills directory
-        dest = skills_dir / skill_path.name
+        # Copy to skills directory, using the skill name as filename to avoid
+        # collisions (plugin structure uses SKILL.md in subdirectories, so
+        # multiple skills would all be named SKILL.md)
+        dest_name = f"{metadata['name']}.md"
+        dest = skills_dir / dest_name
         shutil.copy2(skill_path, dest)
 
-        metadata['path'] = f"skills/{skill_path.name}"
+        metadata['path'] = f"skills/{dest_name}"
         metadata['char_count'] = len(skill_path.read_text(encoding='utf-8'))
         installed.append(metadata)
 
