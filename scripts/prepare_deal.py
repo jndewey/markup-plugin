@@ -677,14 +677,29 @@ Examples:
         else:
             print(f"ℹ️  DOCX skill not available; tracked changes workflow disabled")
 
-    # Copy CLAUDE.md and .claude/commands into workspace
+    # Copy methodology as deal-level CLAUDE.md and commands into workspace
     script_dir = Path(__file__).resolve().parent.parent
+    # Use the deal-review-methodology skill as the deal CLAUDE.md (contains full
+    # review methodology). Fall back to root CLAUDE.md if skill not found.
+    methodology_skill = script_dir / "skills" / "deal-review-methodology" / "SKILL.md"
     claude_md = script_dir / "CLAUDE.md"
-    if claude_md.exists():
+    if methodology_skill.exists():
+        # Strip YAML frontmatter (--- ... ---) before writing as CLAUDE.md
+        content = methodology_skill.read_text(encoding="utf-8")
+        if content.startswith("---"):
+            end = content.find("---", 3)
+            if end != -1:
+                content = content[end + 3:].lstrip("\n")
+        (output_dir / "CLAUDE.md").write_text(content, encoding="utf-8")
+        print(f"✅ CLAUDE.md copied to workspace (from deal-review-methodology skill)")
+    elif claude_md.exists():
         shutil.copy2(claude_md, output_dir / "CLAUDE.md")
         print(f"✅ CLAUDE.md copied to workspace")
 
-    commands_src = script_dir / ".claude" / "commands"
+    # Plugin structure: commands live in commands/ (not .claude/commands/)
+    commands_src = script_dir / "commands"
+    if not commands_src.exists():
+        commands_src = script_dir / ".claude" / "commands"  # fallback for old structure
     if commands_src.exists():
         commands_dst = output_dir / ".claude" / "commands"
         commands_dst.mkdir(parents=True, exist_ok=True)
