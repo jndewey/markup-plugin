@@ -53,11 +53,14 @@ Review all provisions in this deal workspace following the methodology in the **
    PROVISION FOLDER: provisions/{prov_folder}
 
    INSTRUCTIONS:
-   1. Read {deal_dir}/CLAUDE.md for the complete review methodology
+   1. Read {deal_dir}/CLAUDE.md for the complete review methodology — pay special
+      attention to the "revised.txt Quality Rules" section
    2. Read {deal_dir}/full_agreement.txt for full agreement context
-   3. Read {deal_dir}/review_config.json for the review posture
+   3. Read {deal_dir}/review_config.json for the review posture and deal details
+      (deal_type, property_type, jurisdiction)
    4. If {deal_dir}/term_sheet.txt exists, read it for term sheet conformity checking
-   5. If {deal_dir}/skills/manifest.json exists, read it and ALL listed skill files
+   5. If {deal_dir}/skills/manifest.json exists, read it and ALL listed skill files.
+      Skills are REFERENCE MATERIALS only — never cite them in revised.txt
    6. Read {deal_dir}/provisions/{definitions_folder}/revised.txt for defined term context
    7. Read {deal_dir}/provisions/{prov_folder}/original.txt and manifest.json
    8. Analyze and revise this provision per the methodology
@@ -70,6 +73,32 @@ Review all provisions in this deal workspace following the methodology in the **
        add cross_ref_flags array (list of cross-reference concerns), add open_issues array
        (business-point questions for client)
    11. Do NOT modify any files outside this provision's folder
+
+   CRITICAL QUALITY RULES FOR revised.txt:
+   - revised.txt must contain ONLY enforceable contract language plus brief [REVISED: ...]
+     markers. No [NOTE:], [RECOMMENDATION:], [COMMENT:], or advisory text.
+   - NEVER reference skill files, AI tools, benchmarks, or review methodology in the
+     revised text. It must read as if drafted by a human attorney.
+   - Every revision listed in changes_summary.md as "Revision Made" MUST be actually
+     drafted in revised.txt — do not describe changes without implementing them.
+   - Preserve ALL original provisions from original.txt unless deliberately removing
+     them (with explanation in changes_summary.md).
+   - Preserve the original section numbering exactly — do not renumber.
+   - No placeholder cross-references ("Section [X]", "Section 1.XX"). Use actual
+     section numbers from the agreement or draft language inline.
+   - Scale skill benchmark thresholds proportionally to the actual deal size.
+   - Only add provisions relevant to the actual property_type in review_config.json.
+   - Use consistent discretion standards — never "sole but reasonable discretion".
+
+   DRAFTING DEPTH — GO BEYOND REASONABLENESS QUALIFIERS:
+   - When a skill benchmark identifies a substantive mechanical provision as market
+     standard, DRAFT the fully operative contract language in revised.txt. Do not
+     stop at adding "not to be unreasonably withheld" — build out the mechanism that
+     gives the standard practical effect (e.g., budget reallocation rights with
+     contingency floors, retainage step-downs with lien-waiver triggers, deemed-approval
+     timelines, fee caps at commercially reasonable rates).
+   - The revised.txt must contain language a partner could send to opposing counsel.
+     If the skill describes a market mechanism and the agreement lacks it, draft it.
    ```
 
 4. Collect all agent task IDs into a list.

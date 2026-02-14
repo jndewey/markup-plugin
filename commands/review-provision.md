@@ -26,7 +26,15 @@ Review a single provision folder: $ARGUMENTS
     benchmark and include a Skill Reference section in the analysis.
 11. Write output files:
     - `analysis.md` (include Skill Reference section if applicable)
-    - `revised.txt` (full revised text with `[REVISED: explanation]` inline markers)
+    - `revised.txt` — full revised text with brief `[REVISED: explanation]` inline markers.
+      **Follow the revised.txt Quality Rules in the methodology exactly.** In particular:
+      - Only enforceable contract language — no advisory commentary, no [NOTE:] or
+        [RECOMMENDATION:] markers, no references to skill files or AI tools
+      - Every revision described in changes_summary.md must be actually drafted here
+      - Preserve all original provisions unless deliberately removed
+      - Preserve original section numbering — do not renumber
+      - No placeholder cross-references — use actual section numbers
+      - Scale benchmark thresholds to deal size; only add deal-relevant provisions
     - `changes_summary.md`
 12. If `term_sheet.txt` exists in the deal directory, write `term_sheet_compliance.md`
     comparing this provision against the relevant term sheet items

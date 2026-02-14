@@ -292,6 +292,70 @@ or multi-sentence commentary inside markers. Detailed analysis belongs in
 analysis.md and changes_summary.md, not in revised.txt. If a provision requires
 no changes, reproduce the original text without any markers.
 
+**CRITICAL — revised.txt Quality Rules:**
+
+`revised.txt` is the operative contract language that will be used to generate tracked
+changes in a Word document. It must satisfy ALL of the following rules:
+
+1. **No AI/skill references in contract text.** Never reference skill files, benchmark
+   documents, AI tools, or review methodology in the revised provision text. Phrases
+   like "per the construction-loan-negotiation skill" or "as referenced in the attached
+   benchmark" must NEVER appear. The revised text must read as if drafted by a human
+   attorney with no awareness of AI tools.
+
+2. **No advisory commentary in contract text.** The revised text must contain ONLY
+   enforceable contract language plus brief `[REVISED: ...]` markers. Never include
+   `[NOTE: ...]`, `[RECOMMENDATION: ...]`, `[COMMENT: ...]`, `[OBSERVATION: ...]`,
+   or any other advisory/analytical text. All commentary belongs in `analysis.md` and
+   `changes_summary.md`.
+
+3. **Every revision described in analysis.md must be drafted in revised.txt.** If your
+   analysis identifies a change and your changes_summary.md lists it as a "Revision Made",
+   the revised.txt MUST contain the actual drafted language implementing that change.
+   Do not describe revisions without drafting them.
+
+4. **No contradictory legal formulations.** Common errors to avoid:
+   - "sole but reasonable discretion" (contradictory — pick one standard)
+   - "shall not unreasonably withhold in its sole discretion" (same conflict)
+   - "best efforts" paired with "commercially reasonable efforts" for the same obligation
+
+5. **No placeholder cross-references.** Never use "Section [X]", "Section 1.XX",
+   "Article [__]", or similar placeholders. If you are adding a cross-reference,
+   identify the actual section number from the agreement. If no matching section exists,
+   draft the substantive language inline or flag it as an open issue — do not insert
+   a placeholder.
+
+6. **No irrelevant provisions.** Only include provisions appropriate to the actual
+   deal type and property type specified in review_config.json. Do not add hotel
+   management provisions to a multifamily deal, condominium conversion clauses to
+   a rental project, or agricultural covenants to an office building loan. If a skill
+   benchmark covers a provision type that doesn't apply, skip it.
+
+7. **Scale thresholds to deal size.** When a skill provides dollar thresholds calibrated
+   to a different deal size, scale proportionally. For example, if a skill's benchmark
+   is based on a $150M construction loan and the actual deal is $24.5M, a $450,000
+   change order threshold should scale to approximately $75,000. Document the scaling
+   rationale in analysis.md.
+
+8. **Preserve all original provisions unless deliberately removing them.** Do not
+   accidentally omit provisions that exist in original.txt. If the original contains
+   a bankruptcy default trigger, a force majeure clause, or any other provision, it
+   must appear in revised.txt (either as-is or revised). If you are deliberately
+   removing a provision, explain why in changes_summary.md.
+
+9. **Preserve section numbering.** Do not renumber sections, subsections, or clauses.
+   The original document's numbering scheme must be maintained exactly. If adding new
+   subsections, use the original's numbering convention (e.g., new subsection after
+   5.2.3 becomes 5.2.4, shifting subsequent numbers only if absolutely necessary —
+   and if so, flag this in cross_ref_flags).
+
+10. **Consistent discretion standards.** When revising lender discretion clauses,
+    use consistent formulations throughout. Pick ONE standard per context:
+    - "in Lender's reasonable discretion" (borrower-friendly)
+    - "in Lender's sole but good-faith discretion" (moderate)
+    - "in Lender's sole discretion" (lender-friendly)
+    Do not mix incompatible standards within the same provision.
+
 ### `changes_summary.md`
 ```markdown
 # Changes: [Section Title]
@@ -465,6 +529,27 @@ When reviewing each provision:
    use the skill's "Borrower's Desired Position" as the target and the market benchmark
    as the floor. If `lender_friendly`, reverse that. If `balanced`, use the benchmark
    as the target.
+
+6. **Draft the operative provisions, not just reasonableness qualifiers.** When a skill
+   identifies a substantive mechanical provision as market standard (e.g., budget
+   reallocation rights, retainage step-downs, force majeure extensions, deemed-approval
+   mechanisms, punch-list carve-outs), you must **draft the fully operative contract
+   language** in revised.txt — not merely add a "reasonableness" qualifier to the
+   existing text. Adding "not to be unreasonably withheld" is a necessary first step,
+   but a thorough review requires building out the mechanical provisions that give the
+   reasonableness standard practical effect. For example:
+   - A budget reallocation mechanism with cost-savings reallocation rights, contingency
+     deployment percentages, and contingency floors
+   - A retainage step-down triggered by completion milestones with lien-waiver-gated
+     release for completed subcontractor work
+   - Inspector fee caps at commercially reasonable rates customary for the market
+   - GC replacement consent with an affiliate carve-out preserving lender discretion
+     where self-dealing risk exists
+
+   The analysis.md should explain the benchmark and the rationale. The revised.txt must
+   contain the actual drafted language a partner could send to opposing counsel. If the
+   skill describes a market-standard mechanism and the agreement lacks it, draft it —
+   do not merely note the gap.
 
 ### Multiple Skills
 
