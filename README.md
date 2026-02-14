@@ -48,7 +48,7 @@ chmod +x setup.sh new-deal.sh
 ./new-deal.sh my-deal /path/to/agreement.docx --posture borrower_friendly
 
 # Full options — term sheet, skills, notes
-./new-deal.sh centtral-aventura /path/to/loan_agreement.docx \
+./new-deal.sh acme-deal /path/to/loan_agreement.docx \
     --posture borrower_friendly \
     --term-sheet /path/to/term_sheet.docx \
     --skill skills/construction-loan-negotiation.md \
@@ -132,7 +132,7 @@ markup/
 │   └── sample_term_sheet.txt
 │
 └── deals/                     # Deal workspaces (gitignored, created per-deal)
-    └── centtral-aventura/
+    └── acme-deal/
         ├── CLAUDE.md
         ├── full_agreement.txt
         ├── term_sheet.txt
