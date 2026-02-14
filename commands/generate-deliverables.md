@@ -1,8 +1,18 @@
+---
+description: Assemble final deliverables from the completed review
+argument-hint: ""
+---
+
+# Generate Deliverables
+
 Assemble final deliverables from the completed review.
 
-Steps:
+## Workflow
+
 1. Run the assembly script:
+   ```bash
    python scripts/assemble_deal.py . --format txt
+   ```
 
 2. Review the generated deliverables in ./deliverables/ and:
    a. Read the review_memo.md and check for completeness
@@ -18,11 +28,12 @@ Steps:
 
 Report what was generated and highlight any items needing attorney attention.
 
-The final deliverables package should include:
-- review_memo.md — Executive summary and provision-by-provision analysis
-- revised_agreement.txt — Clean revised text
-- redline_agreement.txt — Text with revision markers
-- redline_agreement.docx — Word document with tracked changes (if .docx input)
-- changes_tracker.md — Consolidated change log
-- reconciliation_report.md — Cross-reference and consistency check
-- term_sheet_compliance_report.md — Term sheet conformity analysis (if term sheet provided)
+## Final Deliverables Package
+
+- **review_memo.md** — Executive summary and provision-by-provision analysis
+- **revised_agreement.txt** — Clean revised text
+- **redline_agreement.txt** — Text with revision markers
+- **redline_agreement.docx** — Word document with tracked changes (if .docx input)
+- **changes_tracker.md** — Consolidated change log
+- **reconciliation_report.md** — Cross-reference and consistency check
+- **term_sheet_compliance_report.md** — Term sheet conformity analysis (if term sheet provided)

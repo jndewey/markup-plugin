@@ -1,6 +1,13 @@
+---
+description: Apply all revisions as tracked changes to the original Word document
+argument-hint: ""
+---
+
+# Apply Redlines
+
 Apply all revisions as tracked changes to the original Word document.
 
-Prerequisites: The `unpacked/` directory must exist (created by prepare_deal.py for .docx inputs).
+**Prerequisites:** The `unpacked/` directory must exist (created by prepare_deal.py for .docx inputs).
 
 ## Automated Script (Preferred)
 
@@ -11,7 +18,7 @@ PYTHONPATH=~/.claude/skills/docx python scripts/apply_redlines.py [deal_dir]
 ```
 
 - `deal_dir` defaults to the current working directory
-- The script uses the Document library from the built-in docx skill
+- The script uses the Document library from the ~~docx skill
 - It applies character-level diffs to preserve exact original text
 - Includes built-in redlining validation (reverting changes must reproduce original)
 - Handles UTF-16 encoded XML files automatically
@@ -21,7 +28,7 @@ PYTHONPATH=~/.claude/skills/docx python scripts/apply_redlines.py [deal_dir]
 
 If the automated script is unavailable or modifications are needed:
 
-1. Read the `ooxml.md` documentation from the docx skill (full file, no line limits)
+1. Read the `ooxml.md` documentation from the ~~docx skill (full file, no line limits)
 2. Unpack the document if not already unpacked:
    ```bash
    python ~/.claude/skills/docx/ooxml/scripts/unpack.py original.docx unpacked

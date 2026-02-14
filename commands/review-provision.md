@@ -1,6 +1,14 @@
+---
+description: Review a single provision folder with full agreement context
+argument-hint: "<provision folder path>"
+---
+
+# Review Provision
+
 Review a single provision folder: $ARGUMENTS
 
-Steps:
+## Workflow
+
 1. Read `full_agreement.txt` for complete agreement context
 2. Read `review_config.json` for review posture
 3. Read `deal_summary.json` if available (for cross-reference context)
@@ -13,7 +21,7 @@ Steps:
 8. Read `manifest.json` for cross-references and metadata
 9. If cross-references exist, read those sections from `full_agreement.txt` or
    their respective provision folders for additional context
-10. Analyze and revise the provision per the CLAUDE.md methodology. If an applicable
+10. Analyze and revise the provision per the deal-review-methodology skill. If an applicable
     skill was identified in step 4, compare the provision against the skill's market
     benchmark and include a Skill Reference section in the analysis.
 11. Write output files:
@@ -28,5 +36,10 @@ Steps:
     - Add `"cross_ref_flags"` array listing any cross-reference concerns
     - Add `"open_issues"` array listing business-point questions for client discussion
 
-Provide the provision folder path as an argument, e.g.:
-  /review-provision provisions/03_representations_and_warranties
+## Usage
+
+Provide the provision folder path as an argument:
+
+```
+/review-provision provisions/03_representations_and_warranties
+```

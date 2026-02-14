@@ -1,5 +1,11 @@
-Review all provisions in this deal workspace following the methodology in CLAUDE.md.
-This command uses parallel provision review to significantly reduce total review time.
+---
+description: Review all provisions in the deal workspace using parallel provision review
+argument-hint: ""
+---
+
+# Review All Provisions
+
+Review all provisions in this deal workspace following the methodology in the **deal-review-methodology** skill. This command uses parallel provision review to significantly reduce total review time.
 
 ## Phase 1 — Sequential Setup & Definitions
 
@@ -10,11 +16,11 @@ This command uses parallel provision review to significantly reduce total review
 4. If `skills/manifest.json` exists, read it and then read ALL skill files listed.
    These contain market benchmarks and provision-specific guidance that must be
    referenced during each provision's review where applicable.
-5. If `deal_summary.json` does not exist, generate it per the CLAUDE.md specification
+5. If `deal_summary.json` does not exist, generate it per the deal-review-methodology skill specification
 6. Identify the definitions provision folder (the folder whose manifest.json has a title
    matching "Definitions" or whose folder name contains "definitions")
 7. If the definitions provision has status "pending", review it now — sequentially in
-   this session — following the full CLAUDE.md methodology. Definitions must be
+   this session — following the full methodology. Definitions must be
    completed before other provisions can be reviewed, since every other provision
    depends on defined terms.
 8. Report: "Phase 1 complete. Definitions reviewed. Beginning parallel provision reviews."
@@ -41,7 +47,7 @@ This command uses parallel provision review to significantly reduce total review
    **Agent Prompt Template:**
    ```
    You are a senior commercial real estate finance attorney reviewing a single provision
-   of a loan agreement. Follow the CLAUDE.md methodology exactly.
+   of a loan agreement. Follow the deal-review-methodology skill exactly.
 
    DEAL DIRECTORY: {deal_dir}
    PROVISION FOLDER: provisions/{prov_folder}
@@ -54,7 +60,7 @@ This command uses parallel provision review to significantly reduce total review
    5. If {deal_dir}/skills/manifest.json exists, read it and ALL listed skill files
    6. Read {deal_dir}/provisions/{definitions_folder}/revised.txt for defined term context
    7. Read {deal_dir}/provisions/{prov_folder}/original.txt and manifest.json
-   8. Analyze and revise this provision per the CLAUDE.md methodology
+   8. Analyze and revise this provision per the methodology
    9. Write the following files to {deal_dir}/provisions/{prov_folder}/:
       - analysis.md (include Skill Reference section if any skill applies)
       - revised.txt (full revised text with [REVISED: explanation] inline markers)
@@ -84,7 +90,7 @@ This command uses parallel provision review to significantly reduce total review
    - "Failed/Still Pending: [list]" (if any)
 
 2. For any provisions that failed in Phase 2, attempt to review them sequentially in
-   this session as a fallback (using the same CLAUDE.md methodology).
+   this session as a fallback (using the same methodology).
 
 3. Run the reconciliation check across all reviewed provisions:
    a. Read all `revised.txt` files

@@ -1,6 +1,6 @@
 # Markup
 
-An agentic legal agreement review system built on top of Claude Code. Designed for commercial real estate finance attorneys reviewing complex loan agreements.
+A Claude Code plugin for reviewing, redlining, and negotiating commercial real estate loan agreements. Designed for commercial real estate finance attorneys reviewing complex loan agreements.
 
 ## Architecture
 
@@ -25,12 +25,24 @@ An agentic legal agreement review system built on top of Claude Code. Designed f
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Setup
+## Installation
+
+### As a Claude Code Plugin
 
 ```bash
-# Clone or create the repo
-git clone <your-repo-url> markup
-cd markup
+# Install from the plugin directory
+claude plugin install /path/to/markup-plugin
+
+# Or install from a GitHub repository
+claude plugin install github:jndewey/markup-plugin
+```
+
+### Manual Setup
+
+```bash
+# Clone the repository
+git clone <your-repo-url> markup-plugin
+cd markup-plugin
 
 # Run setup (installs python-docx, creates deals/ directory)
 chmod +x setup.sh new-deal.sh
@@ -38,6 +50,51 @@ chmod +x setup.sh new-deal.sh
 ```
 
 **Requirements:** Python 3.10+, [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code)
+
+## Plugin Structure
+
+```
+markup-plugin/
+├── .claude-plugin/
+│   └── plugin.json            # Plugin manifest
+├── CLAUDE.md                  # Plugin overview for Claude
+├── CONNECTORS.md              # External tool dependencies
+├── README.md
+│
+├── commands/                  # Slash commands (user-invoked workflows)
+│   ├── review-all.md          # Full parallel provision review
+│   ├── review-provision.md    # Single provision review
+│   ├── apply-redlines.md      # Word document tracked changes
+│   ├── reconcile.md           # Cross-reference consistency check
+│   ├── check-term-sheet.md    # Term sheet compliance check
+│   ├── check-cross-refs.md    # Cross-reference analysis
+│   ├── status.md              # Review progress display
+│   ├── generate-deliverables.md # Final deliverables assembly
+│   └── list-skills.md         # Installed skills summary
+│
+├── skills/                    # Domain knowledge (reference materials)
+│   ├── deal-review-methodology/
+│   │   └── SKILL.md           # Core review methodology (foundational)
+│   ├── construction-loan-negotiation/
+│   │   └── SKILL.md           # CRE construction loan benchmarks
+│   ├── cre-loan-agreement-review/
+│   │   └── SKILL.md           # General CRE loan review framework
+│   └── environmental-indemnity/
+│       └── SKILL.md           # Environmental indemnity guidance
+│
+├── scripts/
+│   ├── prepare_deal.py        # Pre-processing: split agreement, build workspace
+│   ├── assemble_deal.py       # Post-processing: reassemble deliverables
+│   └── apply_redlines.py      # Automated tracked changes script
+│
+├── examples/                  # Sample files for testing
+│   ├── sample_agreement.txt
+│   └── sample_term_sheet.txt
+│
+├── setup.sh                   # One-time environment setup
+├── new-deal.sh                # Convenience script to create deal workspaces
+└── requirements.txt
+```
 
 ## Quick Start
 
@@ -51,15 +108,15 @@ chmod +x setup.sh new-deal.sh
 ./new-deal.sh acme-deal /path/to/loan_agreement.docx \
     --posture borrower_friendly \
     --term-sheet /path/to/term_sheet.docx \
-    --skill skills/construction-loan-negotiation.md \
-    --notes "Focus on cure periods and cash management. Client wants 30-day notice minimum."
+    --skill skills/construction-loan-negotiation/SKILL.md \
+    --notes "Focus on cure periods and cash management."
 
 # Or use prepare_deal.py directly
 python scripts/prepare_deal.py agreement.docx \
     --posture borrower_friendly \
     --term-sheet term_sheet.docx \
-    --skill skills/construction-loan-negotiation.md \
-    --skill skills/florida-cre-provisions.md \
+    --skill skills/construction-loan-negotiation/SKILL.md \
+    --skill skills/environmental-indemnity/SKILL.md \
     --output-dir deals/my-deal
 ```
 
@@ -73,7 +130,7 @@ claude
 ### 3. Run the review
 
 ```
-> /review-all              # Full provision-by-provision review
+> /review-all              # Full provision-by-provision review (parallel)
 > /status                  # Check progress
 > /list-skills             # See what reference skills are loaded
 > /review-provision provisions/05_article_v    # Review a single provision
@@ -97,71 +154,19 @@ python scripts/assemble_deal.py deals/my-deal/ --format docx
 python scripts/prepare_deal.py --status deals/my-deal/
 ```
 
-## Repository Structure
+## Commands
 
-```
-markup/
-├── CLAUDE.md                  # Master agent instructions (copied into each workspace)
-├── README.md
-├── setup.sh                   # One-time environment setup
-├── new-deal.sh                # Convenience script to create deal workspaces
-├── requirements.txt
-├── .gitignore
-│
-├── scripts/
-│   ├── prepare_deal.py        # Pre-processing: split agreement, build workspace
-│   └── assemble_deal.py       # Post-processing: reassemble deliverables
-│
-├── skills/                    # Topical reference skills (tracked in repo)
-│   └── construction-loan-negotiation.md
-│
-├── .claude/
-│   └── commands/              # Slash commands (copied into each workspace)
-│       ├── review-all.md
-│       ├── review-provision.md
-│       ├── reconcile.md
-│       ├── status.md
-│       ├── list-skills.md
-│       ├── check-cross-refs.md
-│       ├── check-term-sheet.md
-│       ├── apply-redlines.md
-│       └── generate-deliverables.md
-│
-├── examples/                  # Sample files for testing
-│   ├── sample_agreement.txt
-│   └── sample_term_sheet.txt
-│
-└── deals/                     # Deal workspaces (gitignored, created per-deal)
-    └── acme-deal/
-        ├── CLAUDE.md
-        ├── full_agreement.txt
-        ├── term_sheet.txt
-        ├── review_config.json
-        ├── deal_summary.json
-        ├── original.docx
-        ├── unpacked/
-        ├── skills/
-        │   ├── manifest.json
-        │   └── *.md
-        ├── .claude/commands/
-        ├── provisions/
-        │   ├── 00_preamble/
-        │   │   ├── original.txt
-        │   │   ├── manifest.json
-        │   │   ├── analysis.md
-        │   │   ├── revised.txt
-        │   │   ├── changes_summary.md
-        │   │   └── term_sheet_compliance.md
-        │   ├── 01_article_i/
-        │   └── ...
-        ├── deliverables/
-        │   ├── review_memo.md
-        │   ├── revised_agreement.txt
-        │   ├── redline_agreement.docx
-        │   ├── changes_tracker.md
-        │   └── term_sheet_compliance_report.md
-        └── scripts/
-```
+| Command | Description |
+|---------|-------------|
+| `/review-all` | Full parallel provision-by-provision review with reconciliation |
+| `/review-provision <path>` | Review a single provision folder |
+| `/apply-redlines` | Apply tracked changes to the Word document |
+| `/reconcile` | Cross-reference and consistency check |
+| `/check-term-sheet` | Term sheet compliance analysis |
+| `/check-cross-refs <path>` | Cross-reference analysis for a provision |
+| `/status` | Show deal review progress |
+| `/generate-deliverables` | Assemble final client deliverables |
+| `/list-skills` | List installed reference skills |
 
 ## Review Postures
 
@@ -172,39 +177,27 @@ markup/
 | `balanced` | Flag non-market provisions, suggest moderate compromises |
 | `compliance_only` | No substantive revisions; flag compliance issues and drafting errors |
 
-## Topical Skills
+## Skills
 
-Skills are Markdown files containing domain-specific market benchmarks, negotiation guidance, and provision-level analysis frameworks. They live in the `skills/` directory and are tracked in the repo.
+Skills are domain knowledge files that provide market benchmarks, negotiation strategies, and provision-level guidance. They live in `skills/` subdirectories as `SKILL.md` files.
 
 ### Included Skills
 
-- **`construction-loan-negotiation.md`** — 14 most commonly negotiated provisions in construction loan agreements with lender/borrower positions and market benchmarks from well-negotiated South Florida condo construction loans
+| Skill | Description |
+|-------|-------------|
+| **deal-review-methodology** | Core four-phase review methodology (foundational — all commands reference this) |
+| **construction-loan-negotiation** | 14 most commonly negotiated CRE construction loan provisions |
+| **cre-loan-agreement-review** | Comprehensive CRE loan agreement review framework |
+| **environmental-indemnity** | Environmental indemnity negotiation guidance |
 
-### Skill Format
+### Adding Skills
 
-```markdown
----
-name: my-skill-name
-description: >
-  Brief description of what this skill covers and when to use it.
----
-# Skill Title
-## 1. Provision Topic
-### Lender's Desired Position
-...
-### Borrower's Desired Position
-...
-### Market Benchmark
-...
-```
-
-### Using Skills
+Skills can be loaded into a deal workspace at creation time:
 
 ```bash
 ./new-deal.sh my-deal agreement.docx \
-    --posture borrower_friendly \
-    --skill skills/construction-loan-negotiation.md \
-    --skill skills/florida-cre-provisions.md
+    --skill skills/construction-loan-negotiation/SKILL.md \
+    --skill skills/environmental-indemnity/SKILL.md
 ```
 
 During review, the agent matches each provision against applicable skill sections, compares the agreement to market benchmarks, and adds a "Skill Reference" section to each analysis.
@@ -219,7 +212,7 @@ When the input is a `.docx`, `/apply-redlines` applies all revisions as tracked 
 
 ## Resume Capability
 
-Each provision tracks review status. If a session is interrupted, `/review-all` picks up where it left off.
+Each provision tracks review status. If a session is interrupted, `/review-all` picks up where it left off — only pending provisions are processed.
 
 ## Caveats
 

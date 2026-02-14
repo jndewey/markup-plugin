@@ -1,8 +1,16 @@
+---
+description: Run a term sheet compliance check across the entire agreement
+argument-hint: ""
+---
+
+# Check Term Sheet
+
 Run a term sheet compliance check across the entire agreement.
 
-Prerequisites: `term_sheet.txt` must exist in the workspace.
+**Prerequisites:** `term_sheet.txt` must exist in the workspace.
 
-Steps:
+## Workflow
+
 1. Read `term_sheet.txt` thoroughly and extract every business term, economic point,
    and structural requirement
 2. Read `full_agreement.txt` for the complete agreement context
@@ -20,7 +28,8 @@ Steps:
    - Term sheet items with no corresponding agreement provision
    - Agreement provisions with no corresponding term sheet item (flag if economic)
 
-Pay special attention to:
+## Key Areas to Check
+
 - Loan amount, interest rate, maturity, and extension options
 - Fee structures and prepayment premiums
 - Financial covenant thresholds (DSCR, LTV, debt yield)

@@ -1,6 +1,14 @@
+---
+description: Run a reconciliation check across all reviewed provisions
+argument-hint: ""
+---
+
+# Reconcile
+
 Run a reconciliation check across all reviewed provisions.
 
-Steps:
+## Workflow
+
 1. Read full_agreement.txt for the original agreement context
 2. Read all revised.txt files from every provision folder with status "reviewed"
 3. Check for:
