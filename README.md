@@ -70,6 +70,7 @@ markup-plugin/
 │   ├── check-cross-refs.md    # Cross-reference analysis
 │   ├── status.md              # Review progress display
 │   ├── generate-deliverables.md # Final deliverables assembly
+│   ├── review-drafts.md       # Conform drafts to term sheet / commitment letter
 │   └── list-skills.md         # Installed skills summary
 │
 ├── skills/                    # Domain knowledge (reference materials)
@@ -85,7 +86,8 @@ markup-plugin/
 ├── scripts/
 │   ├── prepare_deal.py        # Pre-processing: split agreement, build workspace
 │   ├── assemble_deal.py       # Post-processing: reassemble deliverables
-│   └── apply_redlines.py      # Automated tracked changes script
+│   ├── apply_redlines.py      # Automated tracked changes script
+│   └── review_draft.py        # Apply corrections to a single draft document
 │
 ├── examples/                  # Sample files for testing
 │   ├── sample_agreement.txt
@@ -139,6 +141,7 @@ claude
 > /reconcile               # Check consistency across all revisions
 > /apply-redlines          # Apply tracked changes to the Word document
 > /generate-deliverables   # Assemble final client deliverables
+> /review-drafts           # Conform draft documents to a term sheet or commitment letter
 ```
 
 ### 4. Assemble deliverables (alternative to slash command)
@@ -166,6 +169,7 @@ python scripts/prepare_deal.py --status deals/my-deal/
 | `/check-cross-refs <path>` | Cross-reference analysis for a provision |
 | `/status` | Show deal review progress |
 | `/generate-deliverables` | Assemble final client deliverables |
+| `/review-drafts` | Conform draft loan documents to a term sheet or commitment letter |
 | `/list-skills` | List installed reference skills |
 
 ## Review Postures
@@ -205,6 +209,56 @@ During review, the agent matches each provision against applicable skill section
 ## Term Sheet Compliance
 
 When a term sheet is provided (`--term-sheet`), the agent checks every provision against the agreed business terms, categorizing each as conforming, deviating (with severity), or not addressed.
+
+## Draft Conformity Review
+
+The `/review-drafts` command handles a different use case from the main review workflow: verifying that a package of draft loan documents correctly implements the terms of a controlling document (term sheet, commitment letter, or loan approval).
+
+### Setup
+
+Place all draft `.docx` files in a `drafts/` subfolder of the working directory:
+
+```
+working-directory/
+├── drafts/
+│   ├── loan_agreement.docx
+│   ├── guaranty.docx
+│   ├── environmental_indemnity.docx
+│   └── ...
+└── scripts/           # (if not using plugin install)
+```
+
+### Workflow
+
+```
+> /review-drafts
+```
+
+1. **Requirement extraction** — The command prompts for the controlling document (`.docx` or `.pdf`), then extracts and numbers every business term, economic point, and structural requirement into `drafts/requirements.md`.
+
+2. **Parallel draft review** — Each draft document is reviewed in parallel by a dedicated agent that checks conformity against the extracted requirements. Deviations are corrected with tracked changes applied directly to the `.docx` files.
+
+3. **Compliance matrix** — A markdown table is generated at `drafts/compliance_matrix.md` with three columns:
+   - **Requirement** — each loan requirement from the controlling document
+   - **Location** — where in the draft documents the requirement is addressed
+   - **Operative Provision** — a snippet of the actual operative language
+
+This acts as a quality control checklist, making it easy to verify that every term sheet requirement has been implemented and to spot any gaps.
+
+### Output
+
+```
+drafts/
+├── requirements.md                         # Extracted requirement list
+├── compliance_matrix.md                    # Three-column QC table
+├── loan_agreement.docx                     # With tracked changes (if corrections needed)
+├── loan_agreement_conformity.md            # Per-document conformity report
+├── loan_agreement_corrections.json         # Machine-readable corrections
+├── guaranty.docx                           # With tracked changes (if corrections needed)
+├── guaranty_conformity.md
+├── guaranty_corrections.json
+└── ...
+```
 
 ## Tracked Changes (Word Documents)
 

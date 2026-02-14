@@ -32,4 +32,5 @@ Additional skills provide domain-specific market benchmarks:
 | `/check-cross-refs` | Cross-reference analysis for a provision |
 | `/status` | Deal review progress |
 | `/generate-deliverables` | Assemble final client deliverables |
+| `/review-drafts` | Conform draft loan documents to a term sheet or commitment letter |
 | `/list-skills` | Show installed reference skills |

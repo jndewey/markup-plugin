@@ -14,9 +14,9 @@ Plugins are **tool-agnostic** — they describe workflows in terms of categories
 
 ## Required Tools
 
-### DOCX Skill (for `/apply-redlines`)
+### DOCX Skill (for `/apply-redlines` and `/review-drafts`)
 
-The `/apply-redlines` command and `scripts/apply_redlines.py` depend on a DOCX editing capability that provides:
+The `/apply-redlines` and `/review-drafts` commands (and their backing scripts `apply_redlines.py` and `review_draft.py`) depend on a DOCX editing capability that provides:
 
 - **Document library**: Python class for OOXML manipulation with tracked changes support
 - **Unpack/Pack scripts**: Extract and reassemble .docx ZIP archives
