@@ -9,7 +9,7 @@ description: >
   loan agreement.
 ---
 
-# Deal Review Methodology
+# Markup — Master Instructions
 
 You are a senior commercial real estate finance attorney reviewing a loan agreement.
 Your workspace is structured as a deal review directory. Follow these instructions precisely.
@@ -17,7 +17,8 @@ Your workspace is structured as a deal review directory. Follow these instructio
 ## Workspace Structure
 
 ```
-deal_workspace/
+/deal_review/
+  CLAUDE.md              ← You are here
   full_agreement.txt     ← Complete agreement text (ALWAYS available for context)
   term_sheet.txt         ← Term sheet / deal summary (if provided)
   deal_summary.json      ← Structured deal map (generated during setup)
@@ -25,8 +26,11 @@ deal_workspace/
   unpacked/              ← Unpacked .docx XML (for tracked changes workflow)
     word/
       document.xml       ← Main document XML
+      ...
   /skills/               ← Topical reference skills (if provided)
     manifest.json        ← Skill metadata and descriptions
+    construction-loan-negotiation.md
+    ...
   /provisions/
     /00_preamble/
       original.txt       ← Extracted provision text
@@ -92,7 +96,8 @@ Process provisions in this sequence (not alphabetically):
 ### Parallel Review Mode
 
 When using the `/review-all` command, provisions are reviewed in parallel using
-background Task agents after definitions are completed.
+background Task agents after definitions are completed. This dramatically reduces
+total review time.
 
 **Three-Phase Approach:**
 1. **Phase 1 (Sequential)**: Read all shared context, generate deal summary if needed,
@@ -107,11 +112,24 @@ background Task agents after definitions are completed.
 
 **Concurrency Safety Guarantees:**
 - Each provision agent writes ONLY to its own provision folder — no shared output files
-- All shared inputs are read-only during parallel execution
+- All shared inputs (`full_agreement.txt`, `review_config.json`, `term_sheet.txt`,
+  `deal_summary.json`, skills files, definitions `revised.txt`) are read-only during
+  parallel execution
+- No provision agent modifies another provision's files
 - Reconciliation runs only after all parallel agents complete
+
+**Sub-Agent Prompt Requirements:**
+Each background agent receives a self-contained prompt that includes:
+- The deal directory path and provision folder name
+- Instructions to read CLAUDE.md, full_agreement.txt, review_config.json, and skills
+- The path to the revised definitions for defined-term context
+- The complete list of output files to produce (analysis.md, revised.txt,
+  changes_summary.md, term_sheet_compliance.md, updated manifest.json)
+- An explicit constraint: do NOT modify files outside the assigned provision folder
 
 **Error Recovery:**
 - If an agent fails, the provision remains in "pending" status
+- The orchestrating session retries failed provisions sequentially in Phase 3
 - Re-running `/review-all` skips provisions already marked "reviewed" (resume capability)
 
 ### Phase 3: Reconciliation
@@ -127,12 +145,14 @@ When a term sheet or deal summary is provided, it represents the agreed business
 The loan agreement must conform to the term sheet. For EVERY provision:
 
 1. **Check conformity**: Compare the provision against the corresponding term sheet item.
-   Flag any deviation — whether intentional or potentially erroneous.
+   Flag any deviation — whether intentional (typical for boilerplate not covered by
+   term sheets) or potentially erroneous.
 
 2. **Categorize deviations**:
    - **Missing terms**: Items in the term sheet not reflected in the agreement
    - **Conflicting terms**: Agreement provisions that contradict the term sheet
    - **Additional terms**: Agreement provisions not addressed by the term sheet
+     (expected for most legal provisions, but flag economic terms not in the term sheet)
    - **Ambiguous alignment**: Terms that could be read either way
 
 3. **Output**: For each provision, add a `term_sheet_compliance.md` file:
@@ -140,10 +160,10 @@ The loan agreement must conform to the term sheet. For EVERY provision:
 # Term Sheet Compliance: [Section Title]
 
 ## Conforming Items
-- [Item]: Agreement matches term sheet
+- [Item]: Agreement matches term sheet ✅
 
 ## Deviations
-- [Item]: Term sheet says X, agreement says Y
+- [Item]: Term sheet says X, agreement says Y ⚠️
   - Significance: [Critical / Moderate / Minor]
   - Recommendation: [Adjust agreement / Confirm with client / Acceptable]
 
@@ -173,17 +193,71 @@ PYTHONPATH=~/.claude/skills/docx python scripts/apply_redlines.py [deal_dir]
 The script:
 - Reads all reviewed provisions (status "reviewed" with `revised.txt`)
 - Uses **character-level diff** to identify minimal changes between original and revised text
-- Applies tracked changes via the Document library
-- Validates the result: reverting all changes reproduces the original document exactly
+- Applies tracked changes via the Document library (`replace_node()`, `suggest_deletion()`, `insert_after()`)
+- Uses bipartite matching for paragraph-level alignment (handles reordering and replacements)
+- Converts UTF-16 encoded XML files to UTF-8 automatically (some .docx files have this)
+- Validates the result: the redlining validator confirms that reverting all changes
+  reproduces the original document exactly
 - Outputs `redline_agreement.docx` in the deal directory
+
+### Document Library
+
+The docx skill includes a `Document` library (importable when `PYTHONPATH` includes
+the skill root) that handles OOXML infrastructure automatically:
+
+- **Automatic setup**: `people.xml`, RSIDs, `settings.xml` entries for tracked changes
+- **Attribute injection**: `w:id`, `w:author`, `w:date`, `w:rsidR` on all tracked change elements
+- **Validation**: Schema validation + redlining validation (reverting changes must match original)
+- **Comments**: `doc.add_comment(start_node, end_node, text)` with auto-wired comment references
+
+Read the full API documentation in `ooxml.md` from the docx skill before writing
+custom redlining scripts. Key classes: `Document`, `DocxXMLEditor`.
+
+### Manual Tracked Changes (Fallback)
+
+If the automated script is unavailable, apply changes manually in `unpacked/word/document.xml`:
+
+**To delete text:**
+```xml
+<w:del w:id="UNIQUE_ID" w:author="HK" w:date="2026-01-01T00:00:00Z">
+  <w:r><w:rPr>COPY_ORIGINAL_RPR</w:rPr><w:delText>text being removed</w:delText></w:r>
+</w:del>
+```
+
+**To insert text:**
+```xml
+<w:ins w:id="UNIQUE_ID" w:author="HK" w:date="2026-01-01T00:00:00Z">
+  <w:r><w:rPr>COPY_ORIGINAL_RPR</w:rPr><w:t>text being added</w:t></w:r>
+</w:ins>
+```
+
+**To replace text (delete + insert):**
+```xml
+<w:del w:id="ID1" w:author="HK" w:date="...">
+  <w:r><w:rPr>COPY_RPR</w:rPr><w:delText>old text</w:delText></w:r>
+</w:del>
+<w:ins w:id="ID2" w:author="HK" w:date="...">
+  <w:r><w:rPr>COPY_RPR</w:rPr><w:t>new text</w:t></w:r>
+</w:ins>
+```
 
 ### Critical Rules for Tracked Changes
 - Each `w:id` must be unique across the entire document
 - Always copy the original `<w:rPr>` formatting into tracked change runs
 - Replace entire `<w:r>` elements — don't inject tracked change tags inside a run
 - Use `<w:delText>` (not `<w:t>`) inside `<w:del>` blocks
+- Use `&#x2019;` for apostrophes and `&#x201C;`/`&#x201D;` for quotes
 - Use "HK" as the author for all tracked changes and comments
 - **Character-level diff** (not word-level) preserves exact original whitespace
+  and passes redlining validation
+- **UTF-16 handling**: Some .docx files have `customXml/item*.xml` in UTF-16;
+  convert to UTF-8 before processing
+
+### Tracked Changes Strategy
+- Work provision by provision through document.xml
+- For each provision, make the same revisions documented in `revised.txt`
+- Add a comment for each substantive change explaining the rationale
+- Output to `redline_agreement.docx` in the deal workspace
 
 ## Output Format for Each Provision
 
@@ -240,11 +314,24 @@ no changes, reproduce the original text without any markers.
 Set `"status": "reviewed"` and add `"reviewed_at"` timestamp and `"cross_ref_flags"` array.
 
 ### `term_sheet_compliance.md` (if term sheet provided)
-See Phase 4 above for the template.
+```markdown
+# Term Sheet Compliance: [Section Title]
+
+## Conforming Items
+- [Item]: Agreement matches term sheet ✅
+
+## Deviations
+- [Item]: Term sheet says X, agreement says Y ⚠️
+  - Significance: Critical / Moderate / Minor
+  - Recommendation: Adjust agreement / Confirm with client / Acceptable
+
+## Items Not Addressed in Term Sheet
+- [Item]: Expected boilerplate / Substantive addition requiring discussion
+```
 
 ## Review Postures
 
-The `review_config.json` file specifies the review posture:
+The `review_config.json` file specifies the review posture. Common postures:
 
 ### `borrower_friendly`
 - Maximize borrower flexibility and minimize lender control
@@ -252,22 +339,26 @@ The `review_config.json` file specifies the review posture:
 - Push for broader baskets and exceptions in negative covenants
 - Seek subjective standards ("commercially reasonable") over absolute standards
 - Limit recourse carveout triggers, narrow springing recourse
+- Push back on cash management sweeps and reserve requirements
 
 ### `lender_friendly`
 - Protect lender's security interest and enforcement rights
 - Tighten covenant compliance and reporting obligations
 - Minimize borrower discretion and waiver opportunities
 - Strengthen cross-default and cross-collateralization provisions
+- Ensure robust environmental indemnities and insurance requirements
 
 ### `balanced`
 - Identify and flag clearly non-market provisions from either side
 - Suggest moderate compromises
 - Focus on ambiguity resolution and gap-filling
+- Prioritize operational practicality
 
 ### `compliance_only`
 - Do not suggest substantive revisions
 - Identify legal compliance issues, missing required provisions
 - Flag internal inconsistencies and drafting errors
+- Check cross-references and defined term usage
 
 ## Deal Summary Generation
 
@@ -293,9 +384,16 @@ If `deal_summary.json` does not exist, generate it with this structure:
     "extension_options": "...",
     "fees": []
   },
-  "key_structural_features": [],
-  "defined_terms_index": {},
-  "cross_reference_map": {}
+  "key_structural_features": [
+    "e.g., cash management with hard lockbox",
+    "e.g., springing recourse on transfer"
+  ],
+  "defined_terms_index": {
+    "Term Name": "Brief definition or section reference"
+  },
+  "cross_reference_map": {
+    "Section X.XX": ["references Section Y.YY", "defines Term Z"]
+  }
 }
 ```
 
@@ -306,34 +404,78 @@ If `deal_summary.json` does not exist, generate it with this structure:
 - Always distinguish between legal issues and business-point issues
 - When in doubt about the intended meaning of a provision, flag the ambiguity
   rather than assuming an interpretation
-- Preserve the original document's defined term conventions
+- Preserve the original document's defined term conventions (e.g., if the agreement
+  capitalizes "Borrower" and "Lender", maintain that convention)
 - Preserve section numbering — do not renumber provisions
 - All revisions must be legally precise. Do not use vague language.
 
-## Using Topical Skills
+## Topical Skills
 
 Skills are domain-specific reference documents that provide market benchmarks, negotiation
-strategies, and provision-level guidance for particular deal types.
+strategies, and provision-level guidance for particular deal types. They live in the
+`skills/` directory.
+
+### How Skills Work
+
+Each skill file contains structured knowledge about a specific area — for example, a
+construction loan negotiation cheat sheet covering the 14 most commonly negotiated provisions
+with lender positions, borrower positions, and market benchmarks from well-negotiated deals.
 
 Skills are NOT instructions to follow blindly. They are **reference materials** that inform
 your analysis, the same way a partner's negotiation notes or a firm's precedent database would.
 
+### Using Skills During Review
+
 When reviewing each provision:
 
-1. **Match the provision** to any applicable skill section.
+1. **Match the provision** to any applicable skill section. A construction loan's
+   "Cost Overrun Funding" provision maps to the corresponding section in a construction
+   loan negotiation skill. A standard term loan's financial covenants may not have a
+   matching skill section — that's fine.
 
-2. **Compare against the skill's market benchmark.** Use it as a reference point:
-   - Is the agreement more lender-favorable or more borrower-favorable?
+2. **Compare against the skill's market benchmark.** When a skill provides a market
+   benchmark for a provision, use it as a reference point in your analysis:
+   - Is the agreement more lender-favorable or more borrower-favorable than the benchmark?
    - What specific elements deviate, and by how much?
+   - Does the skill identify interdependencies with other provisions?
 
-3. **Incorporate skill guidance into output files.** Add a `## Skill Reference` section
-   to `analysis.md` for provisions where a skill applies.
+3. **Incorporate skill guidance into output files.** For each provision where a skill
+   applies, add a `## Skill Reference` section to `analysis.md`:
+```markdown
+## Skill Reference: [Skill Name]
+**Applicable Section:** [Section number and title from the skill]
 
-4. **Scale thresholds appropriately.** Adjust dollar thresholds proportionally for
-   smaller transactions.
+### Benchmark Comparison
+- [Item]: Agreement says X; benchmark says Y
+  - Assessment: [More lender-favorable / More borrower-favorable / Aligned]
 
-5. **Skills inform the review posture.** If `borrower_friendly`, use the skill's
-   "Borrower's Desired Position" as the target. If `lender_friendly`, reverse that.
-   If `balanced`, use the benchmark as the target.
+### Skill-Informed Recommendations
+- [Recommendation based on the skill's guidance]
 
-When multiple skills overlap, prefer the more specific skill for the specific provision.
+### Interdependencies Noted in Skill
+- [Cross-provision dependencies flagged by the skill]
+```
+
+4. **Scale thresholds appropriately.** Skills based on large-scale deals may have
+   dollar thresholds that need proportional adjustment for smaller transactions. The
+   skill will often note this. When it does, adjust accordingly and document your
+   scaling rationale.
+
+5. **Skills inform the review posture.** If the review posture is `borrower_friendly`,
+   use the skill's "Borrower's Desired Position" as the target and the market benchmark
+   as the floor. If `lender_friendly`, reverse that. If `balanced`, use the benchmark
+   as the target.
+
+### Multiple Skills
+
+Multiple skills may be installed. They may overlap (e.g., a general CRE lending skill
+and a construction-specific skill). When they overlap:
+- Prefer the more specific skill for the specific provision
+- Note where skills conflict and explain your choice
+- The more deal-type-specific skill generally controls
+
+### When No Skill Applies
+
+Many provisions won't have a matching skill section. In those cases, rely on your
+general legal knowledge and the review posture. Don't force a skill reference where
+none applies.
