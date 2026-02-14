@@ -8,8 +8,8 @@ Uses the Document library from Claude Code's built-in docx skill for:
   - Built-in schema + redlining validation
   - Comment support via doc.add_comment()
 
-Uses character-level diff to preserve exact original text, ensuring the
-redlining validator confirms that reverting all changes produces the original.
+Matches directly against XML paragraphs (not original.txt) to avoid paragraph
+boundary mismatches between text extraction and OOXML structure.
 
 Usage:
     PYTHONPATH=~/.claude/skills/docx python scripts/apply_redlines.py [deal_dir]
@@ -50,18 +50,12 @@ from ooxml.scripts.pack import pack_document
 # ---- Fix UTF-16 encoded XML files ----
 
 def fix_utf16_files(directory):
-    """Convert any UTF-16 encoded XML files to UTF-8.
-
-    Some .docx files contain customXml items encoded in UTF-16.
-    The Document library's pack/parse functions expect UTF-8.
-    """
+    """Convert any UTF-16 encoded XML files to UTF-8."""
     count = 0
     for xml_path in glob.glob(os.path.join(directory, '**', '*.xml'), recursive=True):
         with open(xml_path, 'rb') as f:
             header = f.read(4)
-        # UTF-16 LE BOM: ff fe, UTF-16 BE BOM: fe ff
         if header[:2] in (b'\xff\xfe', b'\xfe\xff'):
-            encoding = 'utf-16-le' if header[:2] == b'\xff\xfe' else 'utf-16-be'
             with open(xml_path, 'rb') as f:
                 content = f.read()
             text = content.decode('utf-16')
@@ -183,112 +177,131 @@ def tracked_runs_xml(rpr, ops):
     return ''.join(parts)
 
 
-# ---- Build change map from provisions ----
+# ---- Section boundary detection ----
 
-def build_changes(prov_dir):
-    """Parse all reviewed provisions and build modification/insertion/deletion maps.
+def find_section_boundaries(all_paras, all_norms):
+    """Find top-level section header paragraph indices.
+
+    Returns dict: section_number_str -> paragraph_index
+    """
+    boundaries = {}
+    # Match patterns like "1.\tDEFINITIONS" or "6. REPRESENTATIONS"
+    for i, n in enumerate(all_norms):
+        # Top-level section: starts with a single number, period, then
+        # tab or space, then uppercase word(s)
+        m = re.match(r'^(\d+)\.\s+([A-Z])', n)
+        if m:
+            sec = m.group(1)
+            if sec not in boundaries:
+                boundaries[sec] = i
+    return boundaries
+
+
+def get_provision_range(section_num, section_boundaries, total_paras):
+    """Get the paragraph index range [start, end) for a section."""
+    start = section_boundaries.get(section_num)
+    if start is None:
+        return None, None
+    # End is the start of the next section (by numeric order)
+    all_starts = sorted(section_boundaries.values())
+    idx = all_starts.index(start)
+    end = all_starts[idx + 1] if idx + 1 < len(all_starts) else total_paras
+    return start, end
+
+
+# ---- Apply modification to a paragraph ----
+
+def apply_modification(ed, para, xml_raw_text, revised_text):
+    """Apply character-level tracked changes to a paragraph.
+
+    Args:
+        ed: DocxXMLEditor for the document
+        para: DOM node of the paragraph
+        xml_raw_text: raw text extracted from the XML paragraph
+        revised_text: the target revised text for this paragraph
 
     Returns:
-        mods: dict mapping normalized original text → revised text
-        ins_list: list of (anchor_norm_text, new_text) tuples
-        dels: set of normalized texts to delete
+        The new paragraph DOM node, or None on failure
     """
-    mods, ins_list, dels = {}, [], set()
+    ppr, rpr = get_ppr(para), get_rpr(para)
 
-    for prov in sorted(os.listdir(prov_dir)):
-        pd = os.path.join(prov_dir, prov)
-        if not os.path.isdir(pd):
-            continue
-        rev_f = os.path.join(pd, 'revised.txt')
-        man_f = os.path.join(pd, 'manifest.json')
-        orig_f = os.path.join(pd, 'original.txt')
-        if not os.path.exists(rev_f):
-            continue
-        with open(man_f) as f:
-            if json.load(f).get('status') != 'reviewed':
-                continue
+    # Split at first tab to separate section-number prefix from body
+    if '\t' in xml_raw_text:
+        orig_pfx, orig_body = xml_raw_text.split('\t', 1)
+        orig_pfx += '\t'
+    else:
+        orig_pfx, orig_body = '', xml_raw_text
 
-        with open(orig_f) as f:
-            orig = [l.rstrip('\n') for l in f if l.strip()]
-        with open(rev_f) as f:
-            rev = [
-                re.sub(r'\s*\[REVISED:.*?\]', '', l).rstrip('\n')
-                for l in f if l.strip()
-            ]
+    if '\t' in revised_text:
+        _, rev_body = revised_text.split('\t', 1)
+    else:
+        rev_body = revised_text
+        m = re.match(r'^[\d.]+\.?\s+', rev_body)
+        if m and orig_pfx:
+            rev_body = rev_body[m.end():]
 
-        on = [nm(l) for l in orig]
-        rn = [nm(l) for l in rev]
+    if nm(orig_body) == nm(rev_body):
+        return None  # no actual change
 
-        for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, on, rn).get_opcodes():
-            if tag == 'equal':
-                continue
-            elif tag == 'delete':
-                for k in range(i1, i2):
-                    dels.add(on[k])
-            elif tag == 'insert':
-                after = on[i1 - 1] if i1 > 0 else None
-                for k in range(j1, j2):
-                    ins_list.append((after, rev[k]))
-                    after = nm(rev[k])
-            elif tag == 'replace':
-                # Bipartite matching: pair original ↔ revised paragraphs by similarity
-                used, matched = set(), {}
-                for oi in range(i1, i2):
-                    best_ri, best_r = None, 0
-                    for ri in range(j1, j2):
-                        if ri in used:
-                            continue
-                        r = difflib.SequenceMatcher(None, on[oi], rn[ri]).ratio()
-                        if r > best_r:
-                            best_ri, best_r = ri, r
-                    if best_ri is not None and best_r > 0.4:
-                        matched[oi] = best_ri
-                        used.add(best_ri)
+    # Character-level diff preserves exact original text
+    ops = merge_ops(char_diff_ops(orig_body, rev_body))
+    runs = tracked_runs_xml(rpr, ops)
 
-                for oi in range(i1, i2):
-                    if oi in matched:
-                        mods[on[oi]] = rev[matched[oi]]
-                    else:
-                        dels.add(on[oi])
+    pfx_xml = ''
+    if orig_pfx:
+        sn = orig_pfx.rstrip('\t')
+        pfx_xml = f'<w:r>{rpr}<w:t>{esc(sn)}</w:t></w:r><w:r>{rpr}<w:tab/></w:r>'
 
-                # Use ORIGINAL text as anchor for insertions (findable in pidx)
-                inv = {ri: oi for oi, ri in matched.items()}
-                after = on[i1 - 1] if i1 > 0 else None
-                for ri in range(j1, j2):
-                    if ri not in used:
-                        ins_list.append((after, rev[ri]))
-                        after = nm(rev[ri])
-                    else:
-                        after = on[inv[ri]]
-
-    return mods, ins_list, dels
+    new_p_xml = f'<w:p>{ppr}{pfx_xml}{runs}</w:p>'
+    try:
+        nodes = ed.replace_node(para, new_p_xml)
+        return next(
+            (x for x in nodes if getattr(x, 'tagName', None) == 'w:p'), None
+        )
+    except Exception as e:
+        print(f"    ERR modify: {e}")
+        return None
 
 
-# ---- Paragraph index helpers ----
+def apply_insertion(ed, anchor_para, revised_text):
+    """Insert a new tracked-change paragraph after the anchor.
 
-def build_para_index(editor):
-    """Build normalized-text → (DOM node, raw text) index for all paragraphs."""
-    pidx = {}
-    raw = {}
-    for p in editor.dom.getElementsByTagName('w:p'):
-        t = extract_text(p)
-        n = nm(t)
-        if n:
-            pidx[n] = p
-            raw[n] = t
-    return pidx, raw
+    Returns:
+        The new paragraph DOM node, or None on failure
+    """
+    rpr = get_rpr(anchor_para)
 
+    if '\t' in revised_text:
+        pfx_part, body_part = revised_text.split('\t', 1)
+        pfx_part += '\t'
+    else:
+        pfx_part, body_part = '', revised_text
+        m = re.match(r'^([\d.]+\.?\s+)', body_part)
+        if m:
+            pfx_part = m.group(1).rstrip() + '\t'
+            body_part = body_part[m.end():]
 
-def find_key(pidx, norm_text):
-    """Find the best-matching key in pidx (exact or fuzzy)."""
-    if norm_text in pidx:
-        return norm_text
-    best, br = None, 0
-    for k in pidx:
-        r = difflib.SequenceMatcher(None, norm_text, k).ratio()
-        if r > br:
-            best, br = k, r
-    return best if best and br > 0.7 else None
+    pfx_runs = ''
+    if pfx_part:
+        sn = pfx_part.rstrip('\t')
+        pfx_runs = (
+            f'<w:r>{rpr}<w:t>{esc(sn)}</w:t></w:r>'
+            f'<w:r>{rpr}<w:tab/></w:r>'
+        )
+    body_run = f'<w:r>{rpr}<w:t xml:space="preserve">{esc(body_part)}</w:t></w:r>'
+    tracked_para = (
+        f'<w:p><w:pPr><w:rPr><w:ins/></w:rPr></w:pPr>'
+        f'<w:ins>{pfx_runs}{body_run}</w:ins></w:p>'
+    )
+
+    try:
+        nodes = ed.insert_after(anchor_para, tracked_para)
+        return next(
+            (x for x in nodes if getattr(x, 'tagName', None) == 'w:p'), None
+        )
+    except Exception as e:
+        print(f"    ERR insert: {e}")
+        return None
 
 
 # ---- Main ----
@@ -321,146 +334,171 @@ def main():
     print("Checking for UTF-16 encoded files...")
     fix_utf16_files(unpacked)
 
-    # Build change map from provision reviews
-    print("Building change map from provisions...")
-    mods, ins_list, dels = build_changes(prov_dir)
-    print(f"  {len(mods)} modifications, {len(ins_list)} insertions, {len(dels)} deletions")
-
-    if not mods and not ins_list and not dels:
-        print("No changes to apply.")
-        return
-
     # Initialize Document library (handles infrastructure automatically)
     print("Initializing Document library...")
     doc = Document(unpacked, author="HK")
     ed = doc["word/document.xml"]
 
-    pidx, raw_text = build_para_index(ed)
-    print(f"  {len(pidx)} paragraphs indexed")
+    # Build ordered list of all paragraphs with their text
+    all_paras = list(ed.dom.getElementsByTagName('w:p'))
+    all_texts = [extract_text(p) for p in all_paras]
+    all_norms = [nm(t) for t in all_texts]
+    print(f"  {len(all_paras)} total paragraphs")
 
-    # ---- 1. Apply modifications ----
-    print("\nApplying modifications...")
-    mc = 0
-    for orig_nm, new_txt in mods.items():
-        key = find_key(pidx, orig_nm)
-        if not key:
-            print(f"  WARN: No match: {orig_nm[:60]}...")
+    # Find section boundaries
+    section_boundaries = find_section_boundaries(all_paras, all_norms)
+    print(f"  Found sections: {sorted(section_boundaries.keys(), key=int)}")
+
+    # Collect reviewed provisions
+    provisions = []
+    for prov_folder in sorted(os.listdir(prov_dir)):
+        prov_path = os.path.join(prov_dir, prov_folder)
+        if not os.path.isdir(prov_path):
             continue
-        p = pidx[key]
-        ppr, rpr = get_ppr(p), get_rpr(p)
-        orig_raw = raw_text[key]
-
-        # Split at first tab to separate section-number prefix from body
-        if '\t' in orig_raw:
-            orig_pfx, orig_body = orig_raw.split('\t', 1)
-            orig_pfx += '\t'
-        else:
-            orig_pfx, orig_body = '', orig_raw
-
-        if '\t' in new_txt:
-            _, rev_body = new_txt.split('\t', 1)
-        else:
-            rev_body = new_txt
-            m = re.match(r'^[\d.]+\.?\s+', rev_body)
-            if m and orig_pfx:
-                rev_body = rev_body[m.end():]
-
-        if orig_body == rev_body:
+        manifest_path = os.path.join(prov_path, 'manifest.json')
+        revised_path = os.path.join(prov_path, 'revised.txt')
+        if not os.path.exists(revised_path) or not os.path.exists(manifest_path):
             continue
-
-        # Character-level diff preserves exact original text
-        ops = merge_ops(char_diff_ops(orig_body, rev_body))
-        runs = tracked_runs_xml(rpr, ops)
-
-        pfx_xml = ''
-        if orig_pfx:
-            sn = orig_pfx.rstrip('\t')
-            pfx_xml = f'<w:r>{rpr}<w:t>{esc(sn)}</w:t></w:r><w:r>{rpr}<w:tab/></w:r>'
-
-        new_p_xml = f'<w:p>{ppr}{pfx_xml}{runs}</w:p>'
-        try:
-            nodes = ed.replace_node(p, new_p_xml)
-            new_p = next(
-                (x for x in nodes if getattr(x, 'tagName', None) == 'w:p'), None
-            )
-            if new_p:
-                pidx[key] = new_p
-                pidx[orig_nm] = new_p
-            mc += 1
-        except Exception as e:
-            print(f"  ERR: {e}")
-    print(f"  {mc} modifications applied")
-
-    # ---- 2. Apply deletions ----
-    print("\nApplying deletions...")
-    dc = 0
-    for dn in dels:
-        key = find_key(pidx, dn)
-        if not key:
-            print(f"  WARN: No match for deletion: {dn[:60]}...")
+        with open(manifest_path) as f:
+            manifest = json.load(f)
+        if manifest.get('status') != 'reviewed':
             continue
-        try:
-            ed.suggest_deletion(pidx[key])
-            dc += 1
-        except Exception as e:
-            print(f"  ERR: {e}")
-    print(f"  {dc} deletions applied")
+        if 'full_agreement' in prov_folder:
+            continue
+        provisions.append({
+            'folder': prov_folder,
+            'path': prov_path,
+            'section_number': manifest.get('section_number', ''),
+            'title': manifest.get('title', ''),
+            'revised_path': revised_path,
+        })
 
-    # ---- 3. Apply insertions ----
-    print("\nApplying insertions...")
-    ic = 0
-    last_ins = {}
-    for after_nm, new_txt in ins_list:
-        ap = None
-        if after_nm and after_nm in last_ins:
-            ap = last_ins[after_nm]
-        elif after_nm:
-            key = find_key(pidx, after_nm)
-            if key:
-                ap = pidx[key]
-        if not ap:
-            print(f"  WARN: No anchor after: {(after_nm or '(start)')[:60]}...")
+    print(f"  {len(provisions)} reviewed provisions to apply")
+
+    # Process each provision
+    total_mc, total_dc, total_ic = 0, 0, 0
+
+    for prov in provisions:
+        sec_num = prov['section_number']
+        title = prov['title']
+        print(f"\n--- {title} (Section {sec_num}) ---")
+
+        start, end = get_provision_range(sec_num, section_boundaries, len(all_paras))
+        if start is None:
+            print(f"  SKIP: Section {sec_num} not found in XML")
             continue
 
-        rpr = get_rpr(ap)
+        # Extract this provision's non-empty XML paragraphs
+        prov_paras = []
+        prov_texts = []
+        prov_norms = []
+        for i in range(start, end):
+            if all_norms[i]:
+                prov_paras.append(all_paras[i])
+                prov_texts.append(all_texts[i])
+                prov_norms.append(all_norms[i])
 
-        if '\t' in new_txt:
-            pfx_part, body_part = new_txt.split('\t', 1)
-            pfx_part += '\t'
-        else:
-            pfx_part, body_part = '', new_txt
-            m = re.match(r'^([\d.]+\.?\s+)', body_part)
-            if m:
-                pfx_part = m.group(1).rstrip() + '\t'
-                body_part = body_part[m.end():]
+        # Read revised.txt
+        with open(prov['revised_path']) as f:
+            revised_raw = [
+                re.sub(r'\s*\[REVISED:.*?\]', '', l).rstrip('\n')
+                for l in f if l.strip()
+            ]
+        rev_norms = [nm(l) for l in revised_raw]
 
-        pfx_runs = ''
-        if pfx_part:
-            sn = pfx_part.rstrip('\t')
-            pfx_runs = (
-                f'<w:r>{rpr}<w:t>{esc(sn)}</w:t></w:r>'
-                f'<w:r>{rpr}<w:tab/></w:r>'
-            )
-        body_run = f'<w:r>{rpr}<w:t xml:space="preserve">{esc(body_part)}</w:t></w:r>'
-        tracked_para = (
-            f'<w:p><w:pPr><w:rPr><w:ins/></w:rPr></w:pPr>'
-            f'<w:ins>{pfx_runs}{body_run}</w:ins></w:p>'
-        )
+        print(f"  XML paragraphs: {len(prov_paras)}, Revised lines: {len(revised_raw)}")
 
-        try:
-            nodes = ed.insert_after(ap, tracked_para)
-            ic += 1
-            new_p = next(
-                (x for x in nodes if getattr(x, 'tagName', None) == 'w:p'), None
-            )
-            if new_p:
-                last_ins[after_nm] = new_p
-                last_ins[nm(new_txt)] = new_p
-        except Exception as e:
-            print(f"  ERR: {e}")
-    print(f"  {ic} insertions applied")
+        # Paragraph-level alignment: XML paragraphs vs revised lines
+        sm = difflib.SequenceMatcher(None, prov_norms, rev_norms)
+        mc, dc, ic = 0, 0, 0
 
-    # ---- 4. Save with validation ----
+        # We need to track the current anchor for insertions as paragraphs
+        # get modified. Use a mutable list to hold current paragraph nodes.
+        current_paras = list(prov_paras)  # copy — will be updated as we go
+
+        for tag, i1, i2, j1, j2 in sm.get_opcodes():
+            if tag == 'equal':
+                continue
+
+            elif tag == 'delete':
+                for k in range(i1, i2):
+                    try:
+                        ed.suggest_deletion(current_paras[k])
+                        dc += 1
+                    except Exception as e:
+                        print(f"    ERR delete: {e}")
+
+            elif tag == 'insert':
+                # Find anchor paragraph (the one just before the insertion point)
+                anchor = current_paras[i1 - 1] if i1 > 0 else current_paras[0]
+                for k in range(j1, j2):
+                    new_p = apply_insertion(ed, anchor, revised_raw[k])
+                    if new_p:
+                        anchor = new_p  # chain insertions
+                        ic += 1
+
+            elif tag == 'replace':
+                # Bipartite matching: pair XML paragraphs ↔ revised lines
+                orig_range = list(range(i1, i2))
+                rev_range = list(range(j1, j2))
+
+                used_rev = set()
+                matched = {}  # orig_idx -> rev_idx
+                for oi in orig_range:
+                    best_ri, best_r = None, 0
+                    for ri in rev_range:
+                        if ri in used_rev:
+                            continue
+                        r = difflib.SequenceMatcher(
+                            None, prov_norms[oi], rev_norms[ri]
+                        ).ratio()
+                        if r > best_r:
+                            best_ri, best_r = ri, r
+                    if best_ri is not None and best_r > 0.35:
+                        matched[oi] = best_ri
+                        used_rev.add(best_ri)
+
+                # Apply modifications for matched pairs
+                for oi, ri in sorted(matched.items()):
+                    new_p = apply_modification(
+                        ed, current_paras[oi],
+                        prov_texts[oi], revised_raw[ri]
+                    )
+                    if new_p:
+                        current_paras[oi] = new_p
+                        mc += 1
+
+                # Delete unmatched XML paragraphs
+                for oi in orig_range:
+                    if oi not in matched:
+                        try:
+                            ed.suggest_deletion(current_paras[oi])
+                            dc += 1
+                        except Exception as e:
+                            print(f"    ERR delete: {e}")
+
+                # Insert unmatched revised lines
+                inv_match = {ri: oi for oi, ri in matched.items()}
+                anchor = current_paras[i1 - 1] if i1 > 0 else current_paras[i1]
+                for ri in rev_range:
+                    if ri in inv_match:
+                        # Matched pair — update anchor to this paragraph
+                        anchor = current_paras[inv_match[ri]]
+                    else:
+                        new_p = apply_insertion(ed, anchor, revised_raw[ri])
+                        if new_p:
+                            anchor = new_p
+                            ic += 1
+
+        print(f"  Applied: {mc} modifications, {dc} deletions, {ic} insertions")
+        total_mc += mc
+        total_dc += dc
+        total_ic += ic
+
+    print(f"\n{'='*50}")
+    print(f"TOTAL: {total_mc} modifications, {total_dc} deletions, {total_ic} insertions")
+
+    # ---- Save with validation ----
     print("\nSaving and validating...")
     try:
         doc.save(unpacked)
@@ -470,7 +508,7 @@ def main():
         doc.save(unpacked, validate=False)
         print("  Saved without validation (review output manually)")
 
-    # ---- 5. Pack to .docx ----
+    # ---- Pack to .docx ----
     output_path = os.path.join(deal, args.output)
     print(f"Packing → {args.output}")
     pack_document(unpacked, output_path)

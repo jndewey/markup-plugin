@@ -82,6 +82,45 @@ Process provisions in this sequence (not alphabetically):
 15. **Guaranty Provisions** — Recourse carveouts, springing recourse
 16. **Miscellaneous / Boilerplate** — Governing law, notices, amendments
 
+### Parallel Review Mode
+
+When using the `/review-all` command, provisions are reviewed in parallel using
+background Task agents after definitions are completed. This dramatically reduces
+total review time.
+
+**Three-Phase Approach:**
+1. **Phase 1 (Sequential)**: Read all shared context, generate deal summary if needed,
+   review the definitions provision. Definitions must complete first because every
+   other provision depends on defined terms.
+2. **Phase 2 (Parallel)**: Launch one background Task agent per pending provision.
+   Each agent independently reads all shared context files, reads the revised
+   definitions, reviews its assigned provision, and writes output exclusively to
+   its own provision folder.
+3. **Phase 3 (Sequential)**: After all agents complete, run reconciliation to check
+   cross-reference consistency, defined-term usage, and inter-provision conflicts.
+
+**Concurrency Safety Guarantees:**
+- Each provision agent writes ONLY to its own provision folder — no shared output files
+- All shared inputs (`full_agreement.txt`, `review_config.json`, `term_sheet.txt`,
+  `deal_summary.json`, skills files, definitions `revised.txt`) are read-only during
+  parallel execution
+- No provision agent modifies another provision's files
+- Reconciliation runs only after all parallel agents complete
+
+**Sub-Agent Prompt Requirements:**
+Each background agent receives a self-contained prompt that includes:
+- The deal directory path and provision folder name
+- Instructions to read CLAUDE.md, full_agreement.txt, review_config.json, and skills
+- The path to the revised definitions for defined-term context
+- The complete list of output files to produce (analysis.md, revised.txt,
+  changes_summary.md, term_sheet_compliance.md, updated manifest.json)
+- An explicit constraint: do NOT modify files outside the assigned provision folder
+
+**Error Recovery:**
+- If an agent fails, the provision remains in "pending" status
+- The orchestrating session retries failed provisions sequentially in Phase 3
+- Re-running `/review-all` skips provisions already marked "reviewed" (resume capability)
+
 ### Phase 3: Reconciliation
 After all provisions are reviewed:
 1. Read through all `revised.txt` files
